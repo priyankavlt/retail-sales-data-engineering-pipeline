@@ -1,0 +1,25 @@
+version: 2
+
+seeds:
+  - name: department_names
+    description: >
+      Illustrative department labels. Walmart anonymised department numbers in the public
+      dataset; this mapping gives analysts readable names and roll-up groups.
+    columns:
+      - name: dept_id
+        data_tests: [unique, not_null]
+      - name: department_name
+        data_tests: [not_null]
+      - name: department_group
+        data_tests: [not_null]
+
+  - name: holiday_weeks
+    description: Holiday weeks (week ending Friday) as defined by Walmart for the dataset.
+    columns:
+      - name: week_date
+        data_tests: [unique, not_null, is_week_ending_friday]
+      - name: holiday_name
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Super Bowl", "Labor Day", "Thanksgiving", "Christmas"]

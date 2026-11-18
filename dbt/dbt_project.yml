@@ -1,0 +1,54 @@
+name: walmart_analytics
+version: "1.0.0"
+config-version: 2
+profile: walmart_analytics
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Kaggle's MarkDown1-5 columns are only populated from this week onwards.
+  markdown_tracking_start: "2011-11-11"
+  date_spine_start: "2010-01-01"
+  date_spine_end: "2014-02-01"
+
+models:
+  walmart_analytics:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: gold
+      +materialized: table
+      core:
+        +tags: ["core"]
+      analytics:
+        +tags: ["analytics"]
+
+seeds:
+  walmart_analytics:
+    +schema: reference
+    department_names:
+      +column_types:
+        dept_id: integer
+        department_name: varchar(64)
+        department_group: varchar(32)
+    holiday_weeks:
+      +column_types:
+        week_date: date
+        holiday_name: varchar(32)
+
+snapshots:
+  walmart_analytics:
+    +target_schema: snapshots

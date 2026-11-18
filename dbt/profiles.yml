@@ -1,0 +1,36 @@
+# DBT_PROFILES_DIR points here. Select a target with DBT_TARGET (default: local).
+walmart_analytics:
+  target: "{{ env_var('DBT_TARGET', 'local') }}"
+  outputs:
+    # Laptop / CI: DuckDB reads the silver Delta tables straight off the local filesystem.
+    local:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '../data/warehouse/walmart.duckdb') }}"
+      extensions: ["delta"]
+      threads: 4
+
+    # docker-compose: silver Delta tables live in MinIO (S3 API).
+    docker:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '/opt/airflow/data/warehouse/walmart.duckdb') }}"
+      extensions: ["httpfs", "delta"]
+      threads: 4
+      secrets:
+        - type: s3
+          key_id: "{{ env_var('AWS_ACCESS_KEY_ID', 'minioadmin') }}"
+          secret: "{{ env_var('AWS_SECRET_ACCESS_KEY', 'minioadmin') }}"
+          region: "{{ env_var('AWS_DEFAULT_REGION', 'us-east-1') }}"
+          endpoint: "{{ env_var('DUCKDB_S3_ENDPOINT', 'minio:9000') }}"
+          url_style: path
+          use_ssl: false
+
+    # Production: Databricks SQL warehouse, Unity Catalog. Token comes from AWS Secrets Manager
+    # via the Airflow connection / environment, never from this file.
+    databricks:
+      type: databricks
+      catalog: "{{ env_var('UC_CATALOG', 'walmart_retail') }}"
+      schema: gold
+      host: "{{ env_var('DATABRICKS_HOST', '') }}"
+      http_path: "{{ env_var('DATABRICKS_HTTP_PATH', '') }}"
+      token: "{{ env_var('DATABRICKS_TOKEN', '') }}"
+      threads: 8

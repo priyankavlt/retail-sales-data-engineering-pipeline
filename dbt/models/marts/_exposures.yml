@@ -1,0 +1,19 @@
+version: 2
+
+exposures:
+  - name: retail_executive_dashboard
+    label: Retail Executive Dashboard
+    type: dashboard
+    maturity: high
+    description: >
+      Databricks SQL / BI dashboard used by merchandising and store operations: chain KPIs,
+      store leaderboard, holiday readiness and markdown ROI.
+    depends_on:
+      - ref('mart_monthly_kpis')
+      - ref('mart_store_weekly_performance')
+      - ref('mart_holiday_impact')
+      - ref('mart_markdown_effectiveness')
+      - ref('mart_department_performance')
+    owner:
+      name: Retail Data Engineering
+      email: data-eng@example.com

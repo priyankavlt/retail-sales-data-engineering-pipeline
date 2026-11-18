@@ -1,0 +1,5 @@
+# Installed into the Airflow image on top of apache/airflow (constraints applied).
+apache-airflow-providers-amazon
+apache-airflow-providers-databricks
+pyspark==3.5.3
+delta-spark==3.2.1

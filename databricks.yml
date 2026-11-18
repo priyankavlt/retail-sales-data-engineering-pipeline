@@ -1,0 +1,41 @@
+# Databricks Asset Bundle: builds the retail_pipeline wheel and deploys the Spark jobs that
+# Airflow triggers by name. Deploy with:  databricks bundle deploy -t dev
+bundle:
+  name: walmart_retail_lakehouse
+
+include:
+  - databricks/resources/*.yml
+
+artifacts:
+  retail_pipeline_wheel:
+    type: whl
+    build: python -m pip wheel --no-deps -w dist .
+    path: .
+
+variables:
+  catalog:
+    description: Unity Catalog catalog holding bronze/silver/gold/ops schemas
+    default: walmart_retail_dev
+  lakehouse_bucket:
+    description: S3 bucket (UC external location) with the raw zone
+    default: walmart-retail-lakehouse-dev
+  node_type:
+    description: Graviton instances give the best price/performance for Photon-less ETL
+    default: m6gd.large
+  spark_version:
+    default: 15.4.x-scala2.12
+  alert_email:
+    default: data-eng@example.com
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+  prod:
+    mode: production
+    variables:
+      catalog: walmart_retail
+      lakehouse_bucket: walmart-retail-lakehouse-prod
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}

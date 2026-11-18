@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: mart_store_weekly_performance
+    description: Store-week KPIs including WoW / YoY growth, 4-week trend and weekly rank.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [store_id, week_date]
+    columns:
+      - name: total_sales
+        data_tests: [not_null]
+      - name: sales_rank_in_week
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+
+  - name: mart_holiday_impact
+    description: Sales lift of each Walmart holiday week versus the store's non-holiday baseline.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [holiday_name, store_format]
+
+  - name: mart_markdown_effectiveness
+    description: Sales lift and incremental sales per markdown dollar, by spend band and format.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [store_format, markdown_band]
+
+  - name: mart_department_performance
+    description: Department revenue, share of chain, rank and YoY run-rate growth per fiscal year.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [dept_id, fiscal_year]
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "share_of_chain_sales <= 1.0001"
+
+  - name: mart_monthly_kpis
+    description: Executive monthly scorecard.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [calendar_year, calendar_month]
+
+unit_tests:
+  - name: store_growth_metrics
+    description: WoW growth and rolling average are computed per store in week order.
+    model: mart_store_weekly_performance
+    given:
+      - input: ref('fct_weekly_sales')
+        rows:
+          - {store_id: 1, dept_id: 1, week_date: 2012-01-06, fiscal_year: 2012, weekly_sales: 100, is_net_return_week: false}
+          - {store_id: 1, dept_id: 2, week_date: 2012-01-06, fiscal_year: 2012, weekly_sales: 100, is_net_return_week: false}
+          - {store_id: 1, dept_id: 1, week_date: 2012-01-13, fiscal_year: 2012, weekly_sales: 300, is_net_return_week: false}
+      - input: ref('dim_store')
+        rows:
+          - {store_id: 1, store_type: A, store_format: Supercenter, store_size_sqft: 100}
+    expect:
+      rows:
+        - {store_id: 1, week_date: 2012-01-06, total_sales: 200, prior_week_sales: null, wow_growth_pct: null, rolling_4wk_avg_sales: 200, sales_per_sqft: 2}
+        - {store_id: 1, week_date: 2012-01-13, total_sales: 300, prior_week_sales: 200, wow_growth_pct: 0.5, rolling_4wk_avg_sales: 250, sales_per_sqft: 3}

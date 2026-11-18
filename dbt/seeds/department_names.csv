@@ -1,0 +1,100 @@
+dept_id,department_name,department_group
+1,Fresh Produce,Grocery
+2,Bakery,Grocery
+3,Deli,Grocery
+4,Meat & Seafood,Grocery
+5,Dairy,Grocery
+6,Frozen Foods,Grocery
+7,Snacks,Grocery
+8,Beverages,Grocery
+9,Pantry Staples,Grocery
+10,Breakfast & Cereal,Grocery
+11,Candy,Grocery
+12,Coffee & Tea,Grocery
+13,International Foods,Grocery
+14,Organic Foods,Grocery
+15,Baby Food & Formula,Grocery
+16,Pharmacy OTC,Health & Wellness
+17,Vitamins,Health & Wellness
+18,Personal Care,Health & Wellness
+19,Beauty,Health & Wellness
+20,Oral Care,Health & Wellness
+21,Hair Care,Health & Wellness
+22,Optical,Health & Wellness
+23,First Aid,Health & Wellness
+24,Sexual Wellness,Health & Wellness
+25,Fragrance,Health & Wellness
+26,Home Decor,Home
+27,Bedding,Home
+28,Bath,Home
+29,Kitchen & Dining,Home
+30,Small Appliances,Home
+31,Storage & Organization,Home
+32,Furniture,Home
+33,Lighting,Home
+34,Cleaning Supplies,Home
+35,Laundry,Home
+36,Paper Goods,Home
+37,Pet Supplies,Home
+38,Candles,Home
+39,Window Treatments,Home
+40,TVs & Video,Electronics & Media
+41,Computers,Electronics & Media
+42,Mobile Phones,Electronics & Media
+43,Video Games,Electronics & Media
+44,Audio,Electronics & Media
+45,Cameras,Electronics & Media
+46,Movies & Music,Electronics & Media
+47,Books & Magazines,Electronics & Media
+48,Wireless Plans,Electronics & Media
+49,Smart Home,Electronics & Media
+50,Mens Apparel,Apparel
+51,Womens Apparel,Apparel
+52,Kids Apparel,Apparel
+53,Baby Apparel,Apparel
+54,Shoes,Apparel
+55,Intimates,Apparel
+56,Accessories,Apparel
+57,Jewelry,Apparel
+58,Watches,Apparel
+59,Sleepwear,Apparel
+60,Activewear,Apparel
+61,Seasonal Apparel,Apparel
+62,Toys,Hardlines
+63,Sporting Goods,Hardlines
+64,Outdoor Recreation,Hardlines
+65,Bikes,Hardlines
+66,Automotive,Hardlines
+67,Hardware,Hardlines
+68,Paint,Hardlines
+69,Lawn & Garden,Hardlines
+70,Garden Center,Hardlines
+71,Tools,Hardlines
+72,Fabrics & Crafts,Hardlines
+73,Party Supplies,Hardlines
+74,Seasonal Decor,Hardlines
+75,Luggage,Hardlines
+76,Office Supplies,Hardlines
+77,School Supplies,Hardlines
+78,Greeting Cards,Hardlines
+79,Gift Cards,Hardlines
+80,Photo Center,Hardlines
+81,Tobacco,Services & Other
+82,Alcohol,Services & Other
+83,Firearms & Ammunition,Services & Other
+84,Fishing,Services & Other
+85,Hunting,Services & Other
+86,Hunting Licenses,Services & Other
+87,Money Services,Services & Other
+88,Tire & Lube Express,Services & Other
+89,Connection Center,Services & Other
+90,Vision Center,Services & Other
+91,Pharmacy Rx,Services & Other
+92,Floral,Services & Other
+93,Bulk Packs,Services & Other
+94,Clearance,Services & Other
+95,Returns Processing,Services & Other
+96,Layaway,Services & Other
+97,Vending,Services & Other
+98,Snack Bar,Services & Other
+99,Rental,Services & Other

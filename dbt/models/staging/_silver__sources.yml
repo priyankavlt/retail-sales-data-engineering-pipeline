@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: silver
+    description: >
+      Conformed Delta tables produced by the PySpark silver job (typed, validated,
+      de-duplicated). On Databricks these are Unity Catalog tables <catalog>.silver.*;
+      locally dbt-duckdb reads the same Delta tables directly via delta_scan.
+    schema: silver
+    meta:
+      external_location: "delta_scan('{{ env_var('DBT_SILVER_ROOT', '../data/lakehouse/silver') }}/{name}')"
+    loaded_at_field: _silver_updated_at
+    freshness:
+      warn_after: {count: 8, period: day}
+      error_after: {count: 15, period: day}
+    tables:
+      - name: stores
+        description: Store master data (one row per store, latest version).
+        columns:
+          - name: store_id
+            data_tests: [unique, not_null]
+      - name: store_features
+        description: Weekly regional and promotional context per store.
+        columns:
+          - name: store_id
+            data_tests: [not_null]
+          - name: week_date
+            data_tests: [not_null]
+      - name: weekly_sales
+        description: Weekly sales per store and department.
+        columns:
+          - name: weekly_sales
+            data_tests: [not_null]

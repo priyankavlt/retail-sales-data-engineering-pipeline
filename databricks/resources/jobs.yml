@@ -1,0 +1,95 @@
+# Each job fans out one task per dataset so stores/features/sales process in parallel on a
+# single autoscaling job cluster. Airflow passes the batch via the `ingest_date` job parameter.
+resources:
+  jobs:
+    walmart_bronze_ingest:
+      name: walmart-bronze-ingest
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+      parameters:
+        - {name: ingest_date, default: ""}
+      job_clusters:
+        - &etl_cluster
+          job_cluster_key: etl
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type}
+            autoscale: {min_workers: 1, max_workers: 4}
+            data_security_mode: SINGLE_USER
+            aws_attributes:
+              availability: SPOT_WITH_FALLBACK
+              first_on_demand: 1
+            spark_conf:
+              spark.databricks.delta.optimizeWrite.enabled: "true"
+              spark.databricks.delta.autoCompact.enabled: "true"
+            spark_env_vars:
+              PIPELINE_ENV: databricks
+              LAKEHOUSE_URI: s3://${var.lakehouse_bucket}
+              UC_CATALOG: ${var.catalog}
+      email_notifications: {on_failure: ["${var.alert_email}"]}
+      tasks:
+        - task_key: bronze_stores
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: bronze, dataset: stores, ingest-date: "{{job.parameters.ingest_date}}"}
+        - task_key: bronze_features
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: bronze, dataset: features, ingest-date: "{{job.parameters.ingest_date}}"}
+        - task_key: bronze_sales
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: bronze, dataset: sales, ingest-date: "{{job.parameters.ingest_date}}"}
+
+    walmart_silver_transform:
+      name: walmart-silver-transform
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+      parameters:
+        - {name: ingest_date, default: ""}
+      job_clusters: [*etl_cluster]
+      email_notifications: {on_failure: ["${var.alert_email}"]}
+      tasks:
+        - task_key: silver_stores
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: silver, dataset: stores, ingest-date: "{{job.parameters.ingest_date}}", run-id: "{{job.run_id}}"}
+        - task_key: silver_features
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: silver, dataset: features, ingest-date: "{{job.parameters.ingest_date}}", run-id: "{{job.run_id}}"}
+        - task_key: silver_sales
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: silver, dataset: sales, ingest-date: "{{job.parameters.ingest_date}}", run-id: "{{job.run_id}}"}
+
+    walmart_lakehouse_maintenance:
+      name: walmart-lakehouse-maintenance
+      max_concurrent_runs: 1
+      job_clusters: [*etl_cluster]
+      tasks:
+        - task_key: optimize_vacuum
+          job_cluster_key: etl
+          libraries: [{whl: ../../dist/*.whl}]
+          python_wheel_task:
+            package_name: retail_pipeline
+            entry_point: walmart-run-layer
+            named_parameters: {layer: maintenance}

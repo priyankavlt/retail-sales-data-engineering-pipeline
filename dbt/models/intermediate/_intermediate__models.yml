@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: int_store_features_filled
+    description: Store-week context with forward-filled macro indicators and markdown totals.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [store_id, week_date]
+    columns:
+      - name: markdown_total
+        description: Sum of MarkDown1-5; NULL for weeks before markdown tracking started.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "is not null"
+              config:
+                where: "markdowns_tracked"
+
+unit_tests:
+  - name: forward_fills_macro_indicators_per_store
+    description: CPI/unemployment gaps take the last known value of the same store only.
+    model: int_store_features_filled
+    given:
+      - input: ref('stg_walmart__store_features')
+        rows:
+          - {store_id: 1, week_date: 2012-01-06, cpi: 220.1, unemployment_rate: 7.1}
+          - {store_id: 1, week_date: 2012-01-13, cpi: null, unemployment_rate: null}
+          - {store_id: 1, week_date: 2012-01-20, cpi: null, unemployment_rate: 7.3}
+          - {store_id: 2, week_date: 2012-01-13, cpi: null, unemployment_rate: 8.0}
+    expect:
+      rows:
+        - {store_id: 1, week_date: 2012-01-06, cpi: 220.1, unemployment_rate: 7.1}
+        - {store_id: 1, week_date: 2012-01-13, cpi: 220.1, unemployment_rate: 7.1}
+        - {store_id: 1, week_date: 2012-01-20, cpi: 220.1, unemployment_rate: 7.3}
+        - {store_id: 2, week_date: 2012-01-13, cpi: null, unemployment_rate: 8.0}
+
+  - name: markdowns_unknown_before_tracking_and_zero_after
+    model: int_store_features_filled
+    given:
+      - input: ref('stg_walmart__store_features')
+        rows:
+          - {store_id: 1, week_date: 2011-11-04, markdown_1: null, markdown_2: null}
+          - {store_id: 1, week_date: 2011-11-11, markdown_1: null, markdown_2: null}
+          - {store_id: 1, week_date: 2011-11-18, markdown_1: 100.50, markdown_2: 20.00}
+    expect:
+      rows:
+        - {store_id: 1, week_date: 2011-11-04, markdowns_tracked: false, markdown_total: null, active_markdown_count: null}
+        - {store_id: 1, week_date: 2011-11-11, markdowns_tracked: true, markdown_total: 0, active_markdown_count: 0}
+        - {store_id: 1, week_date: 2011-11-18, markdowns_tracked: true, markdown_total: 120.50, active_markdown_count: 2}

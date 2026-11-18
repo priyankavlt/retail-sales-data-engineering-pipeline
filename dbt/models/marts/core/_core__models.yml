@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: dim_store
+    description: Current version of each store, with business-friendly format and size band.
+    columns:
+      - name: store_id
+        description: Walmart store number (natural key).
+        data_tests: [unique, not_null]
+      - name: store_format
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Supercenter", "Discount Store", "Neighborhood Market"]
+      - name: version_count
+        description: Number of SCD2 versions observed for the store (>1 means remodeled).
+
+  - name: dim_store_history
+    description: SCD Type 2 store history built from the stores_snapshot.
+    columns:
+      - name: store_version_sk
+        data_tests: [unique, not_null]
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "valid_to is null or valid_to > valid_from"
+
+  - name: dim_department
+    description: Departments observed in sales, with readable names and roll-up groups.
+    columns:
+      - name: dept_id
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    description: Daily calendar with Walmart fiscal year (ends 31 Jan) and week-ending-Friday key.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: week_ending_date
+        data_tests: [not_null, is_week_ending_friday]
+      - name: fiscal_quarter
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4]
+                quote: false
+
+  - name: fct_weekly_sales
+    description: >
+      Weekly sales fact. Grain: store x department x week ending Friday. Carries the store's
+      weekly economic and promotional context so analysts never need to re-join features.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [store_id, dept_id, week_date]
+    columns:
+      - name: weekly_sales_sk
+        data_tests: [unique, not_null]
+      - name: store_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_store')
+                field: store_id
+      - name: dept_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_department')
+                field: dept_id
+      - name: week_date
+        data_tests:
+          - not_null
+          - is_week_ending_friday
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: weekly_sales
+        description: Net sales for the week (negative when returns exceed sales).
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -100000
+                max_value: 1000000
+              config:
+                severity: warn
+      - name: fiscal_year
+        data_tests: [not_null]
