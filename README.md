@@ -200,4 +200,4 @@ and [`docs/runbook.md`](docs/runbook.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)
